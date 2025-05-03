@@ -5,6 +5,8 @@ import torch.nn.functional as functional
 import torch.optim as optim
 import os
 
+print('Imported libraries')
+
 # Setup hyperparameters
 batch_size = 32
 seq_len = 8
@@ -18,7 +20,14 @@ embed_dim = 32
 # Setup fixed seed for reproduceablity
 torch.manual_seed(1337)
 
-os.system('wget \'https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt\'')
+# ret_code = os.system('iwr -outf input.txt \'https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt\'')
+# if ret_code != 0:
+#    print(f'Issue with download file\nReturn Code: {ret_code}')
+#    exit(ret_code)
+
+# Assume that input.txt file is downloads
+# On windows use the below command
+# iwr -outf input.txt 'https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt'
 
 with open('input.txt', 'r') as f:
     data = f.read()
@@ -51,6 +60,7 @@ train_t = data_t[:n]
 valid_t = data_t[n:]
 print(f'Number of characters for training: {len(train_t)}')
 print(f'Number of characters for validation: {len(valid_t)}')
+print('Loaded input.txt file into tensors')
 
 # Dataloader (to generate batch)
 torch.manual_seed(1337)
@@ -69,6 +79,7 @@ def get_batch(split):
 x, y = get_batch('train') # Returens data in the dimensions: (Batch, Time) (B,T)
 print(x)
 print(y)
+print('Created batching function')
 
 @torch.no_grad()
 def estimate_losses():
@@ -189,6 +200,7 @@ class BasicGPT(nn.Module):
       input_copy = torch.cat((input_copy, sampled_idx), dim=1)
     self.train()
     return input_copy
+print('Created all the Necessary classes')
 
 # Setup hyperparameters
 batch_size = 64
@@ -202,6 +214,8 @@ embed_dim = 384
 num_heads = 6
 num_blocks = 6
 dropout = 0.2
+print('Setup all necessary hyperparameters')
+
 if torch.cuda.is_available(): print(f'---- Using CUDA Device ----')
 
 # Train the model
@@ -209,6 +223,9 @@ model = BasicGPT(seq_len, num_blocks, embed_dim, num_heads)
 model.to(device)
 optim = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 
+print('Created model instance and optimizer instance')
+
+print('Starting Training...')
 for step in range(max_iters):
     if step % eval_interval == 0:
         losses = estimate_losses()
@@ -219,9 +236,12 @@ for step in range(max_iters):
     optim.zero_grad()
     loss.backward()
     optim.step()
+print('Training finished...')
 
+print('Generating text...')
 inputs = torch.zeros(1, 1, dtype=torch.int64, device=device)
 outputs = model.generate(inputs, max_new_tokens=300)
 # print(decode(outputs[0].tolist()))
 for output in outputs:
   print(decode(output.tolist()))
+print('Generation Finished')
